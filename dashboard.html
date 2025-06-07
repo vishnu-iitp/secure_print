@@ -1,0 +1,50 @@
+<!-- frontend/dashboard.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Admin Dashboard - Documents</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <h1>Admin Dashboard</h1>
+  <table id="docsTable">
+    <thead><tr>
+      <th>Filename</th><th>Uploaded At</th><th>Status</th><th>Action</th>
+    </tr></thead>
+    <tbody></tbody>
+  </table>
+  <script>
+    async function fetchDocs() {
+      const res = await fetch('/api/documents');
+      const data = await res.json();
+      const tbody = document.querySelector("#docsTable tbody");
+      tbody.innerHTML = "";
+      data.documents.forEach(doc => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${doc.filename}</td>
+          <td>${new Date(doc.uploaded_at).toLocaleString()}</td>
+          <td>${doc.status}</td>
+          <td>${doc.status === 'queued' ? `<button onclick="printDoc('${doc.id}')">Print</button>` : ''}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    async function printDoc(id) {
+      const res = await fetch(`/api/print/${id}`, {method: 'POST'});
+      if (res.ok) {
+        alert('Print command sent.');
+        fetchDocs(); // refresh
+      } else {
+        alert('Print error');
+      }
+    }
+
+    // Poll every 5 seconds
+    setInterval(fetchDocs, 5000);
+    fetchDocs();
+  </script>
+</body>
+</html>
